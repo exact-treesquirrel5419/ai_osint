@@ -192,3 +192,85 @@ org:"OVH"
 ```
 -"401" -"403" -"login" -"password" http.status:200
 ```
+---
+
+## 🆕 MCP Servers & AI Agent Gateways (v1.2.0)
+
+> MCP architecture has systemic RCE — 200,000 vulnerable instances estimated (Ox Security, April 2026).
+
+```
+# MCP HTTP/SSE endpoints
+http.html:"mcp" "tools" port:3000
+http.html:"Model Context Protocol" port:8080
+http.html:"mcp_message" port:443
+
+# nginx-ui with MCP (CVE-2026-33032 — CVSS 9.8, actively exploited)
+http.title:"Nginx UI" port:443
+http.title:"nginx ui" port:9000
+http.title:"Nginx UI" "/mcp"
+```
+
+---
+
+## 🆕 AI Coding Assistants & IDE Backends (v1.2.0)
+
+```
+# Open WebUI (popular Ollama frontend)
+http.title:"Open WebUI" port:3000
+http.title:"Open WebUI" port:8080
+
+# Flowise (CVE-2026-40933 — RCE via MCP adapters)
+http.title:"Flowise" port:3000
+http.title:"FlowiseAI"
+
+# LiteLLM Proxy (OpenAI-compatible gateway, LLMjacking target)
+http.title:"LiteLLM" port:4000
+http.html:"litellm" "proxy" port:4000
+
+# GPT Researcher
+http.title:"GPT Researcher"
+
+# Langflow / LangChain backends
+http.title:"Langflow" port:7860
+```
+
+---
+
+## 🆕 vLLM Servers — LLMjacking Targets (v1.2.0)
+
+> Operation Bizarre Bazaar actively targets vLLM servers and OpenAI-compatible APIs for commercial resale (Pillar Security).
+
+```
+http.html:"vLLM" port:8000
+"vllm" port:8000 "model"
+http.html:"vllm" "/v1/models" port:8000
+```
+
+---
+
+## 🆕 DeepSeek-Style ClickHouse Exposure (v1.2.0)
+
+> Wiz Research found DeepSeek's ClickHouse DB exposed with 1M+ log entries including plaintext chat histories and API keys.
+
+```
+product:"ClickHouse" port:8123
+product:"ClickHouse" port:9000 -"Login"
+http.html:"ClickHouse" "play" port:8123
+```
+
+---
+
+## 🆕 Additional LLM Inference Servers (v1.2.0)
+
+```
+# Text Generation Inference (HuggingFace TGI)
+http.html:"text-generation-inference" port:8080
+http.html:"tgi" "/generate" port:80
+
+# TabbyAPI / Tabby (self-hosted coding assistant)
+http.title:"Tabby" port:8080
+http.html:"tabbyAPI" port:5000
+
+# LocalAI
+http.title:"LocalAI" port:8080
+```
